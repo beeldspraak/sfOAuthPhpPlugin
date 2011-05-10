@@ -1,0 +1,102 @@
+# sfOAuthPhpPlugin #
+
+## Introduction ##
+
+OAuth allows you to authenticate with foreign applications and exchange private data:
+
+* during authentication the user is directed to a login page of the foreign application;
+* after login the foreign application will send an Access Token;
+* this Access Token secures further requests to the foreign application;
+* the Access Token enables the application to exchange private data untill:
+  * the Access Token is expired;
+  * or the the foreign application user removes the allowed access for your application;
+
+More information:
+
+* [oauth-php library](http://code.google.com/p/oauth-php/ "OAuth Consumer And Server Library For PHP")
+
+## Installation ##
+
+Install from the project root.
+
+* For a git project
+
+        $ git submodule add git://github.com/beeldspraak/sfOAuthPhpPlugin.git plugins/sfOAuthPhpPlugin
+
+* For other projects, optionally add ".git" to ignore from the version control system
+
+        $ git clone git://github.com/beeldspraak/sfOAuthPhpPlugin.git plugins/sfOAuthPhpPlugin
+        
+* enable the plugin in _config/ProjectConfiguration.class.php_
+* download [oauth-php](http://code.google.com/p/oauth-php/downloads/list "oauth-php download") and move the _library_ directory to _lib/vendor/oauth-php_
+* insert the sql for oauth-php:
+  * lib/vendor/oauth-php/store/mysql/mysql.sql
+  * use a doctrine migration class if desired, see as example: plugins/sfOAuthPhpPlugin/lib/migration/doctrine/oauth_php.php.example
+
+### sfUser ###
+
+The sfUser class is extended using the _method_not_found_ event, get the symfony user in fe. an action and call the methods:
+* getOAuthClient: Get a client to communicate with the server of the specified client
+  * implement _isOAuthPublic_ in fe. myUser.php
+    * return TRUE if the user should create a public connection for the client
+    * a public connection is available for all other users returning TRUE for this method
+    * the client is created using NULL as userId, this means the client can also be accessed from a task to create fe. a sync
+  * if _isOAuthPublic_ does not exist or does not return TRUE and _getGuardUser_ exists the authenticated user is connected to the client
+  * if none of the above is valid the connection is always public for the client 
+* getAvailableOAuthClients: Return the available clients, this are the clients listed in oauth.yml
+* getConnectedOAuthClients: Return the connected clients
+* getUnConnectedOAuthClients: Return the unconnected clients
+* isOAuthConnected: Return if the user has an access token for the specified client
+
+## Services ##
+
+Using oAuth requires you to register your application with the foreign application and get a consumer key and consumer secret.
+
+### Create a client ###
+
+* create a class that extends the OAuthClientBase class, this class acts as a wrapper to integrate the oauth-php library with Doctrine and symfony
+* implement the specific logic for the service in the client class
+  * see the Twitter class for a three-legged OAuth example 
+  * see the Facebook class for a two-legged OAuth example
+  
+### Existing clients ###
+
+* Facebook
+  * [Authentication](http://developers.facebook.com/docs/authentication/ "Authentication")
+  * [Register Developer App](http://www.facebook.com/developers/ "Register Developer App")
+  * [Graph API](http://developers.facebook.com/docs/reference/api/ "Graph API")
+  * [Facebook Query Language](http://developers.facebook.com/docs/reference/fql/ "Facebook Query Language")
+* Google
+* Hyves
+  * [Getting started](http://www.hyves-developers.nl/documentation/data-api/getting-started "Getting started")
+  * [API Documentation](http://www.hyves-developers.nl/version/2.0 "API Documentation")
+* MySpace
+* SoundCloud
+* Twitter
+  * [Register new Twitter app](http://dev.twitter.com/login?redirect_after_login=%2Fapps%2Fnew "Register new Twitter app")
+  * [API Documentation](http://dev.twitter.com/doc/ "API Documentation")
+* YouTube
+
+### oauth.yml ###
+
+Configure all services in the `oauth.yml` configuration file:
+    
+    # lib/config/oauth.yml
+    # OAuth Consumers
+    clients:
+      twitter:
+        consumerKey:    A0Rsafek8Ndfjdskl4UMw7w
+        consumerSecret: eA9WJtI5laesdfgdsfgdsfd72JG8bhrwx4RfjLMSgFUfMo
+      hyves:
+        consumerKey:    Nzc5N197eTZNqC8awefcJhup4V
+        consumerSecret: Nzc5N19dergergregkrhA64wu
+      facebook:
+        consumerKey:    0249c28581c0dagsdgef4b7cdb76fa229
+        consumerSecret: 088c60fb4cb7sdgdsgf3846754e488d17
+        applicationId:  1736489058459878
+        
+## TODO ##
+
+* create a _OAuthStoreDoctrine_ that extends _OAuthStoreAbstract_ for a better integration of the oauth_php library with symfony and Doctrine
+* create a Doctrine schema for the tables  
+* update the _OAuthClientBase_ to use the _OAuthStoreDoctrine_

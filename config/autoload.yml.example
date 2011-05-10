@@ -1,0 +1,5 @@
+autoload:
+  oauth-php:
+    name:           oauth-php
+    path:           "%SF_LIB_DIR%/vendor/oauth-php"
+    recursive:      true
